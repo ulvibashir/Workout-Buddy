@@ -41,7 +41,7 @@ export function useFirestoreDoc<T>(
         }
         setLoading(false);
       },
-      () => setLoading(false) // offline — localStorage already loaded
+      (e) => { console.error(`[Firestore] snapshot error ${docPath}:`, e); setLoading(false); }
     );
     return unsub;
   }, [docPath, collectionName, docId]);
@@ -52,7 +52,9 @@ export function useFirestoreDoc<T>(
       localStorage.setItem(`${collectionName}__${docId}`, JSON.stringify(value));
       try {
         await setDoc(doc(db, docPath), value as object, { merge: true });
-      } catch {}
+      } catch (e) {
+        console.error(`[Firestore] write failed ${docPath}:`, e);
+      }
     },
     [docPath, collectionName, docId]
   );
@@ -85,7 +87,7 @@ export function useFirestoreCollection<T extends { id: string }>(
         localStorage.setItem(`col__${collectionName}`, JSON.stringify(docs));
         setLoading(false);
       },
-      () => setLoading(false)
+      (e) => { console.error(`[Firestore] collection snapshot error ${collectionName}:`, e); setLoading(false); }
     );
     return unsub;
   }, [collectionName]);
@@ -104,7 +106,9 @@ export function useFirestoreCollection<T extends { id: string }>(
           rest,
           { merge: true }
         );
-      } catch {}
+      } catch (e) {
+        console.error(`[Firestore] upsert failed ${collectionName}/${item.id}:`, e);
+      }
     },
     [collectionName, items]
   );
@@ -116,7 +120,9 @@ export function useFirestoreCollection<T extends { id: string }>(
       localStorage.setItem(`col__${collectionName}`, JSON.stringify(next));
       try {
         await deleteDoc(doc(db, `users/${UID}/${collectionName}/${id}`));
-      } catch {}
+      } catch (e) {
+        console.error(`[Firestore] delete failed ${collectionName}/${id}:`, e);
+      }
     },
     [collectionName, items]
   );
