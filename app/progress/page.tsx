@@ -4,8 +4,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Trophy, Target, Plus, X } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import MetricCard from "@/components/progress/MetricCard";
-import { ATHLETE, SIX_MONTH_GOALS } from "@/lib/data/athlete";
+import { SIX_MONTH_GOALS } from "@/lib/data/athlete";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
+import { useProfile } from "@/lib/hooks/useProfile";
 import { getTodayKey } from "@/lib/utils";
 
 interface MetricEntry {
@@ -17,6 +18,7 @@ interface MetricEntry {
 }
 
 export default function ProgressPage() {
+  const { profile } = useProfile();
   const { items: entries, upsert } = useFirestoreCollection<MetricEntry>("bodyMetrics");
   const [showLog, setShowLog] = useState(false);
   const [form, setForm] = useState({ weight: "", rhr: "", hrv: "", vo2max: "" });
@@ -33,10 +35,10 @@ export default function ProgressPage() {
   };
 
   const current = {
-    weight: latest ? parseFloat(latest.weight) || ATHLETE.baselineMetrics.weight : ATHLETE.baselineMetrics.weight,
-    rhr: latest ? parseFloat(latest.rhr) || ATHLETE.baselineMetrics.rhr : ATHLETE.baselineMetrics.rhr,
-    hrv: latest ? parseFloat(latest.hrv) || ATHLETE.baselineMetrics.hrv : ATHLETE.baselineMetrics.hrv,
-    vo2max: latest ? parseFloat(latest.vo2max) || ATHLETE.baselineMetrics.vo2max : ATHLETE.baselineMetrics.vo2max,
+    weight: latest ? parseFloat(latest.weight) || profile.baselineMetrics.weight : profile.baselineMetrics.weight,
+    rhr: latest ? parseFloat(latest.rhr) || profile.baselineMetrics.rhr : profile.baselineMetrics.rhr,
+    hrv: latest ? parseFloat(latest.hrv) || profile.baselineMetrics.hrv : profile.baselineMetrics.hrv,
+    vo2max: latest ? parseFloat(latest.vo2max) || profile.baselineMetrics.vo2max : profile.baselineMetrics.vo2max,
   };
 
   const prevVals = prev ? { weight: parseFloat(prev.weight), rhr: parseFloat(prev.rhr), hrv: parseFloat(prev.hrv) } : undefined;
@@ -67,9 +69,12 @@ export default function ProgressPage() {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
             {[
-              { label: "Distance", value: "43.08km" }, { label: "Official Time", value: "6:39:03" },
-              { label: "Avg Pace", value: "9:06/km" }, { label: "Avg HR", value: "157 bpm" },
-              { label: "Elevation", value: "333m" }, { label: "Calories", value: "2,838" },
+              { label: "Distance", value: `${profile.achievements.bakuMarathon2026.distance}km` },
+              { label: "Official Time", value: profile.achievements.bakuMarathon2026.officialTime },
+              { label: "Avg Pace", value: `${profile.achievements.bakuMarathon2026.avgPace}/km` },
+              { label: "Avg HR", value: `${profile.achievements.bakuMarathon2026.avgHR} bpm` },
+              { label: "Elevation", value: `${profile.achievements.bakuMarathon2026.elevation}m` },
+              { label: "Calories", value: profile.achievements.bakuMarathon2026.calories.toLocaleString() },
             ].map(({ label, value }) => (
               <div key={label} style={{ textAlign: "center", padding: "8px 4px", backgroundColor: "#242442", borderRadius: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{value}</div>

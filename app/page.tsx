@@ -7,6 +7,7 @@ import Navigation from "@/components/shared/Navigation";
 import { WORKOUTS } from "@/lib/data/workouts";
 import { QUOTES, ATHLETE } from "@/lib/data/athlete";
 import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
+import { useProfile } from "@/lib/hooks/useProfile";
 import { getDayOfWeek, getTodayKey } from "@/lib/utils";
 
 interface QuickMetrics { weight: string; rhr: string; hrv: string }
@@ -18,6 +19,8 @@ export default function Dashboard() {
   const todayWorkout = WORKOUTS[dayKey];
   const quote = QUOTES[today.getDate() % QUOTES.length];
   const todayKey = getTodayKey();
+
+  const { profile } = useProfile();
 
   const { data: metrics, save: saveMetrics } = useFirestoreDoc<Record<string, QuickMetrics>>(
     "bodyMetrics", "all", {}
@@ -45,7 +48,7 @@ export default function Dashboard() {
             <p style={{ color: "#9ca3af", fontSize: 13, marginBottom: 2 }}>
               {format(today, "EEEE, MMM d")}
             </p>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Hey, {ATHLETE.name} 👋</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>Hey, {profile.name} 👋</h1>
           </div>
           <button
             onClick={() => setShowQuickLog(true)}
@@ -82,9 +85,9 @@ export default function Dashboard() {
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 12 }}>
           {[
-            { label: "Weight", value: todayMetrics?.weight || ATHLETE.baselineMetrics.weight, unit: "kg", icon: Scale, color: "#fd7e14" },
-            { label: "RHR", value: todayMetrics?.rhr || ATHLETE.baselineMetrics.rhr, unit: "bpm", icon: Heart, color: "#e94560" },
-            { label: "HRV", value: todayMetrics?.hrv || ATHLETE.baselineMetrics.hrv, unit: "ms", icon: Activity, color: "#0f9b58" },
+            { label: "Weight", value: todayMetrics?.weight || profile.baselineMetrics.weight, unit: "kg", icon: Scale, color: "#fd7e14" },
+            { label: "RHR", value: todayMetrics?.rhr || profile.baselineMetrics.rhr, unit: "bpm", icon: Heart, color: "#e94560" },
+            { label: "HRV", value: todayMetrics?.hrv || profile.baselineMetrics.hrv, unit: "ms", icon: Activity, color: "#0f9b58" },
           ].map(({ label, value, unit, icon: Icon, color }) => (
             <div key={label} style={{ backgroundColor: "#1a1a2e", borderRadius: 12, padding: "12px 10px", textAlign: "center" }}>
               <Icon size={16} color={color} style={{ marginBottom: 4 }} />
