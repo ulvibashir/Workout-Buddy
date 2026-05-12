@@ -4,10 +4,11 @@ import { Plus, Check, Search, X, Trash2 } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import MacroRing from "@/components/nutrition/MacroRing";
 import WaterTracker from "@/components/nutrition/WaterTracker";
-import { NUTRITION_TARGETS, FOOD_DATABASE, SUPPLEMENTS, MEAL_SECTIONS, type FoodItem } from "@/lib/data/nutrition";
+import { useAppData } from "@/components/shared/AppProvider";
 import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
 import { getTodayKey, getDayOfWeek } from "@/lib/utils";
-import { WORKOUTS } from "@/lib/data/workouts";
+import type { FoodItem } from "@/lib/data/nutrition";
+import { MEAL_SECTIONS } from "@/lib/data/nutrition";
 
 interface LoggedFood {
   id: string;
@@ -26,10 +27,11 @@ interface DayLog {
 }
 
 export default function NutritionPage() {
+  const { nutritionTargets, supplements, foodDatabase, workoutDays, seeding } = useAppData();
   const todayKey = getTodayKey();
   const dayKey = getDayOfWeek();
-  const trainingDay = WORKOUTS[dayKey]?.intensity !== "Low" && dayKey !== "sunday";
-  const targets = trainingDay ? NUTRITION_TARGETS.trainingDays : NUTRITION_TARGETS.restDays;
+  const trainingDay = workoutDays[dayKey]?.intensity !== "Low" && dayKey !== "sunday";
+  const targets = trainingDay ? nutritionTargets.trainingDays : nutritionTargets.restDays;
 
   const { data: dayLog, save: saveDayLog } = useFirestoreDoc<DayLog>(
     "nutritionLogs", todayKey, { foods: [], water: 0, supplements: [] }
@@ -45,16 +47,11 @@ export default function NutritionPage() {
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [qty, setQty] = useState(1);
 
-  const filtered = FOOD_DATABASE.filter((f) => f.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
+  const filtered = foodDatabase.filter((f) => f.name.toLowerCase().includes(search.toLowerCase())).slice(0, 8);
 
   const calcMacros = (food: FoodItem, amount: number) => {
     const scale = food.unit === "100g" ? amount / 100 : amount;
-    return {
-      protein: food.protein * scale,
-      carbs: food.carbs * scale,
-      fat: food.fat * scale,
-      calories: food.calories * scale,
-    };
+    return { protein: food.protein * scale, carbs: food.carbs * scale, fat: food.fat * scale, calories: food.calories * scale };
   };
 
   const confirmAdd = () => {
@@ -73,15 +70,20 @@ export default function NutritionPage() {
     setAddingMeal(null);
   };
 
-  const removeFood = (id: string) =>
-    saveDayLog({ ...dayLog, foods: dayLog.foods.filter((f) => f.id !== id) });
+  const removeFood = (id: string) => saveDayLog({ ...dayLog, foods: dayLog.foods.filter((f) => f.id !== id) });
 
   const toggleSupplement = (id: string) => {
-    const sups = dayLog.supplements.includes(id)
-      ? dayLog.supplements.filter((s) => s !== id)
-      : [...dayLog.supplements, id];
+    const sups = dayLog.supplements.includes(id) ? dayLog.supplements.filter((s) => s !== id) : [...dayLog.supplements, id];
     saveDayLog({ ...dayLog, supplements: sups });
   };
+
+  if (seeding) {
+    return (
+      <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#9ca3af" }}>Loading nutrition data...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
@@ -98,7 +100,6 @@ export default function NutritionPage() {
       </div>
 
       <div style={{ padding: "0 16px" }}>
-        {/* Macro Rings */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, marginBottom: 12 }}>
           <div style={{ textAlign: "center", marginBottom: 12 }}>
             <span style={{ fontSize: 28, fontWeight: 800 }}>{Math.round(totals.calories)}</span>
@@ -115,7 +116,6 @@ export default function NutritionPage() {
           <WaterTracker current={dayLog.water} target={targets.water} onChange={(v) => saveDayLog({ ...dayLog, water: v })} />
         </div>
 
-        {/* Meal Sections */}
         {MEAL_SECTIONS.map((meal) => {
           const mealFoods = dayLog.foods.filter((f) => f.meal === meal);
           const mealCals = mealFoods.reduce((a, f) => a + f.calories, 0);
@@ -148,10 +148,9 @@ export default function NutritionPage() {
           );
         })}
 
-        {/* Supplements */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Supplements</p>
-          {SUPPLEMENTS.map((sup) => {
+          {supplements.map((sup) => {
             const checked = dayLog.supplements.includes(sup.id);
             return (
               <div key={sup.id} onClick={() => toggleSupplement(sup.id)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid #2d2d4e", cursor: "pointer" }}>
@@ -171,7 +170,6 @@ export default function NutritionPage() {
         </div>
       </div>
 
-      {/* Add Food Modal */}
       {addingMeal && (
         <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.8)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
           <div style={{ backgroundColor: "#1a1a2e", width: "100%", borderRadius: "16px 16px 0 0", padding: 20, maxHeight: "80vh", overflowY: "auto" }}>
@@ -181,12 +179,10 @@ export default function NutritionPage() {
                 <X size={20} color="#9ca3af" />
               </button>
             </div>
-
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", backgroundColor: "#242442", borderRadius: 10, marginBottom: 12 }}>
               <Search size={16} color="#9ca3af" />
               <input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search food..." style={{ flex: 1, background: "none", border: "none", color: "#fff", fontSize: 15, outline: "none" }} />
             </div>
-
             {!selectedFood ? (
               <div>
                 {filtered.map((f) => (
@@ -207,7 +203,6 @@ export default function NutritionPage() {
                   </label>
                   <input type="number" value={qty} onChange={(e) => setQty(Number(e.target.value))} style={{ width: "100%", padding: "10px 12px", background: "#242442", border: "1px solid #2d2d4e", borderRadius: 8, color: "#fff", fontSize: 16 }} />
                 </div>
-                {/* Preview */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, marginBottom: 14, backgroundColor: "#242442", borderRadius: 10, padding: 10 }}>
                   {(() => {
                     const m = calcMacros(selectedFood, qty);
@@ -233,7 +228,6 @@ export default function NutritionPage() {
           </div>
         </div>
       )}
-
       <Navigation />
     </div>
   );

@@ -4,9 +4,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Trophy, Target, Plus, X } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import MetricCard from "@/components/progress/MetricCard";
-import { SIX_MONTH_GOALS } from "@/lib/data/athlete";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { useAppData } from "@/components/shared/AppProvider";
 import { getTodayKey } from "@/lib/utils";
 
 interface MetricEntry {
@@ -19,6 +19,7 @@ interface MetricEntry {
 
 export default function ProgressPage() {
   const { profile } = useProfile();
+  const { sixMonthGoals } = useAppData();
   const { items: entries, upsert } = useFirestoreCollection<MetricEntry>("bodyMetrics");
   const [showLog, setShowLog] = useState(false);
   const [form, setForm] = useState({ weight: "", rhr: "", hrv: "", vo2max: "" });
@@ -145,7 +146,7 @@ export default function ProgressPage() {
             <Target size={16} color="#e94560" />
             <span style={{ fontWeight: 700, fontSize: 15 }}>6-Month Goals</span>
           </div>
-          {SIX_MONTH_GOALS.map((goal) => (
+          {sixMonthGoals.map((goal) => (
             <div key={goal.metric} style={{ marginBottom: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
                 <span style={{ fontWeight: 600 }}>{goal.metric}</span>

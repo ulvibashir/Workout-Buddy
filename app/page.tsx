@@ -4,10 +4,9 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { Scale, Heart, Activity, Zap, ChevronRight, Plus, Trophy } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
-import { WORKOUTS } from "@/lib/data/workouts";
-import { QUOTES, ATHLETE } from "@/lib/data/athlete";
 import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
 import { useProfile } from "@/lib/hooks/useProfile";
+import { useAppData } from "@/components/shared/AppProvider";
 import { getDayOfWeek, getTodayKey } from "@/lib/utils";
 
 interface QuickMetrics { weight: string; rhr: string; hrv: string }
@@ -16,11 +15,12 @@ interface NutritionTotals { calories: number; protein: number; carbs: number; fa
 export default function Dashboard() {
   const today = new Date();
   const dayKey = getDayOfWeek(today);
-  const todayWorkout = WORKOUTS[dayKey];
-  const quote = QUOTES[today.getDate() % QUOTES.length];
   const todayKey = getTodayKey();
 
   const { profile } = useProfile();
+  const { workoutDays, quotes } = useAppData();
+  const todayWorkout = workoutDays[dayKey];
+  const quote = quotes[today.getDate() % Math.max(quotes.length, 1)];
 
   const { data: metrics, save: saveMetrics } = useFirestoreDoc<Record<string, QuickMetrics>>(
     "bodyMetrics", "all", {}
@@ -141,7 +141,7 @@ export default function Dashboard() {
           <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.8 }}>This Week</p>
           <div style={{ display: "flex", gap: 6 }}>
             {["monday","tuesday","wednesday","thursday","friday","saturday","sunday"].map((d) => {
-              const w = WORKOUTS[d];
+              const w = workoutDays[d];
               const isToday = d === dayKey;
               return (
                 <div key={d} style={{ flex: 1, height: 36, borderRadius: 8, backgroundColor: isToday ? w.color : `${w.color}33`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: isToday ? 700 : 400, color: isToday ? "#fff" : w.color, border: isToday ? "none" : `1px solid ${w.color}44` }}>

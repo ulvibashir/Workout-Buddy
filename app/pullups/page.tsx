@@ -3,48 +3,39 @@ import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Plus, Minus, Target, RefreshCw } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
-import { PULLUP_PROGRAM } from "@/lib/data/athlete";
+import { useAppData } from "@/components/shared/AppProvider";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
 import { getTodayKey } from "@/lib/utils";
 
 interface PullUpSession {
-  id: string;      // date string YYYY-MM-DD
+  id: string;
   sets: number[];
   maxReps: number;
   totalReps: number;
 }
 
 export default function PullUpsPage() {
+  const { pullupProgram, seeding } = useAppData();
   const { items: sessions, upsert } = useFirestoreCollection<PullUpSession>("pullUpLogs");
   const todayKey = getTodayKey();
 
   const todaySession = sessions.find((s) => s.id === todayKey);
   const todaySets = todaySession?.sets ?? [];
-  const [currentReps, setCurrentReps] = useState(PULLUP_PROGRAM.currentTraining.reps);
+  const [currentReps, setCurrentReps] = useState(pullupProgram.currentTraining.reps);
 
   const addSet = (reps: number) => {
     const newSets = [...todaySets, reps];
-    upsert({
-      id: todayKey,
-      sets: newSets,
-      maxReps: Math.max(...newSets),
-      totalReps: newSets.reduce((a, b) => a + b, 0),
-    });
+    upsert({ id: todayKey, sets: newSets, maxReps: Math.max(...newSets), totalReps: newSets.reduce((a, b) => a + b, 0) });
   };
 
   const removeLastSet = () => {
     const newSets = todaySets.slice(0, -1);
-    upsert({
-      id: todayKey,
-      sets: newSets,
-      maxReps: newSets.length ? Math.max(...newSets) : 0,
-      totalReps: newSets.reduce((a, b) => a + b, 0),
-    });
+    upsert({ id: todayKey, sets: newSets, maxReps: newSets.length ? Math.max(...newSets) : 0, totalReps: newSets.reduce((a, b) => a + b, 0) });
   };
 
   const allTimeMax = sessions.length
-    ? Math.max(...sessions.map((s) => s.maxReps), PULLUP_PROGRAM.currentMax)
-    : PULLUP_PROGRAM.currentMax;
+    ? Math.max(...sessions.map((s) => s.maxReps), pullupProgram.currentMax)
+    : pullupProgram.currentMax;
 
   const chartData = [...sessions]
     .sort((a, b) => a.id.localeCompare(b.id))
@@ -53,13 +44,21 @@ export default function PullUpsPage() {
 
   const totalSets = todaySets.length;
   const totalReps = todaySets.reduce((a, b) => a + b, 0);
-  const targetTotal = PULLUP_PROGRAM.currentTraining.sets * PULLUP_PROGRAM.currentTraining.reps;
+  const targetTotal = pullupProgram.currentTraining.sets * pullupProgram.currentTraining.reps;
+
+  if (seeding) {
+    return (
+      <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#9ca3af" }}>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ padding: "20px 16px 12px" }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Pull Up Tracker</h1>
-        <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>Goal: 10 → 20 reps</p>
+        <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>Goal: {pullupProgram.currentMax} → 20 reps</p>
       </div>
 
       <div style={{ padding: "0 16px" }}>
@@ -70,7 +69,7 @@ export default function PullUpsPage() {
           </div>
           <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, textAlign: "center", borderTop: "3px solid #0077b6" }}>
             <div style={{ fontSize: 42, fontWeight: 900, color: "#0077b6" }}>
-              {PULLUP_PROGRAM.currentTraining.sets}×{PULLUP_PROGRAM.currentTraining.reps}
+              {pullupProgram.currentTraining.sets}×{pullupProgram.currentTraining.reps}
             </div>
             <div style={{ color: "#9ca3af", fontSize: 12 }}>Training Protocol</div>
           </div>
@@ -90,7 +89,6 @@ export default function PullUpsPage() {
             ))}
             {todaySets.length === 0 && <span style={{ color: "#9ca3af", fontSize: 13 }}>No sets logged yet</span>}
           </div>
-
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 14 }}>
             <button onClick={() => setCurrentReps((r) => Math.max(1, r - 1))} style={{ width: 44, height: 44, borderRadius: "50%", border: "1px solid #2d2d4e", background: "#242442", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
               <Minus size={18} />
@@ -103,7 +101,6 @@ export default function PullUpsPage() {
               <Plus size={18} />
             </button>
           </div>
-
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => addSet(currentReps)} style={{ flex: 1, padding: 12, backgroundColor: "#e94560", border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               Log Set {totalSets + 1}
@@ -122,7 +119,7 @@ export default function PullUpsPage() {
             <RefreshCw size={16} color="#fd7e14" />
             <span style={{ fontWeight: 700, fontSize: 14 }}>Grip Rotation</span>
           </div>
-          {PULLUP_PROGRAM.grips.map((g) => (
+          {pullupProgram.grips.map((g) => (
             <div key={g.name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #2d2d4e" }}>
               <div>
                 <span style={{ fontWeight: 600, fontSize: 13 }}>{g.name}</span>
@@ -157,7 +154,7 @@ export default function PullUpsPage() {
             <Target size={16} color="#0f9b58" />
             <span style={{ fontWeight: 700, fontSize: 14 }}>6-Month Progression</span>
           </div>
-          {PULLUP_PROGRAM.weeklyProgression.map((p, i) => (
+          {pullupProgram.weeklyProgression.map((p, i) => (
             <div key={i} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: "1px solid #2d2d4e" }}>
               <div style={{ width: 56, flexShrink: 0, fontSize: 11, color: "#fd7e14", fontWeight: 600 }}>
                 {(p as any).weeks ? `Wk ${(p as any).weeks}` : `Mo ${(p as any).month}`}

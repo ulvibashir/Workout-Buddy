@@ -3,11 +3,13 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import ExerciseCard from "@/components/workout/ExerciseCard";
-import { WORKOUTS, MORNING_MOBILITY, DAY_ORDER, DAY_LABELS } from "@/lib/data/workouts";
+import { useAppData } from "@/components/shared/AppProvider";
 import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
-import { getDayOfWeek, getTodayKey } from "@/lib/utils";
+import { getDayOfWeek } from "@/lib/utils";
+import { DAY_ORDER, DAY_LABELS } from "@/lib/data/workouts";
 
 export default function WorkoutPage() {
+  const { workoutDays, morningMobility, seeding } = useAppData();
   const todayDayKey = getDayOfWeek();
   const [selectedDay, setSelectedDay] = useState(todayDayKey);
   const [mobilityOpen, setMobilityOpen] = useState(false);
@@ -18,11 +20,19 @@ export default function WorkoutPage() {
     "workoutLogs", "completed", {}
   );
 
-  const workout = WORKOUTS[selectedDay];
+  const workout = workoutDays[selectedDay];
 
   const toggleCompleted = (key: string) => {
     saveCompleted({ ...completedDays, [key]: !completedDays[key] });
   };
+
+  if (seeding || !workout) {
+    return (
+      <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "#9ca3af" }}>Loading workout data...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
@@ -33,7 +43,7 @@ export default function WorkoutPage() {
 
       <div style={{ padding: "12px 16px", display: "flex", gap: 6, overflowX: "auto" }}>
         {DAY_ORDER.map((d) => {
-          const w = WORKOUTS[d];
+          const w = workoutDays[d];
           const isSelected = d === selectedDay;
           const isToday = d === todayDayKey;
           return (
@@ -76,7 +86,7 @@ export default function WorkoutPage() {
           </button>
           {mobilityOpen && (
             <div style={{ padding: "0 14px 14px" }}>
-              {MORNING_MOBILITY.map((ex, i) => <ExerciseCard key={i} exercise={ex} accentColor="#20c997" showTimer={false} />)}
+              {morningMobility.map((ex, i) => <ExerciseCard key={i} exercise={ex} accentColor="#20c997" showTimer={false} />)}
             </div>
           )}
         </div>
@@ -129,10 +139,7 @@ export default function WorkoutPage() {
           </div>
         )}
 
-        <button
-          onClick={() => toggleCompleted(selectedDay)}
-          style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: completedDays[selectedDay] ? "#0f9b58" : workout.color, color: "#fff", fontSize: 15, fontWeight: 700, marginBottom: 16 }}
-        >
+        <button onClick={() => toggleCompleted(selectedDay)} style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: completedDays[selectedDay] ? "#0f9b58" : workout.color, color: "#fff", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
           {completedDays[selectedDay] ? "Workout Completed!" : "Mark Complete"}
         </button>
       </div>
