@@ -1,46 +1,45 @@
 "use client";
 import { useState } from "react";
-import { User, Download, Trash2, Info, Shield, ChevronRight, Moon } from "lucide-react";
+import { User, Download, Trash2, Info, ChevronRight } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import { ATHLETE } from "@/lib/data/athlete";
 import { NUTRITION_TARGETS } from "@/lib/data/nutrition";
-import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+
+const UID = "ulvi";
+const COLLECTIONS = ["bodyMetrics", "nutritionLogs", "pullUpLogs", "runningLogs", "workoutLogs"];
 
 export default function SettingsPage() {
-  const [profile, setProfile] = useLocalStorage("athlete_profile", ATHLETE);
-  const [editProfile, setEditProfile] = useState(false);
-  const [form, setForm] = useState({ weight: ATHLETE.baselineMetrics.weight.toString() });
   const [exportMsg, setExportMsg] = useState("");
+  const [clearing, setClearing] = useState(false);
 
-  const clearAllData = () => {
-    if (confirm("Clear all logged data? This cannot be undone.")) {
-      const keys = ["body_metrics", "nutrition_logs", "pullup_sessions", "run_logs", "nutrition_totals"];
-      keys.forEach((k) => localStorage.removeItem(k));
-      alert("All data cleared.");
+  const exportData = async () => {
+    const result: Record<string, unknown> = {};
+    for (const col of COLLECTIONS) {
+      const snap = await getDocs(collection(db, `users/${UID}/${col}`));
+      result[col] = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     }
-  };
-
-  const exportData = () => {
-    const data: Record<string, unknown> = {};
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        try {
-          data[key] = JSON.parse(localStorage.getItem(key) || "");
-        } catch {
-          data[key] = localStorage.getItem(key);
-        }
-      }
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(result, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ulvi-dashboard-export-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `ulvi-dashboard-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setExportMsg("Data exported!");
+    setExportMsg("Exported from Firestore!");
     setTimeout(() => setExportMsg(""), 3000);
+  };
+
+  const clearAllData = async () => {
+    if (!confirm("Delete ALL data from Firestore? This cannot be undone.")) return;
+    setClearing(true);
+    for (const col of COLLECTIONS) {
+      const snap = await getDocs(collection(db, `users/${UID}/${col}`));
+      await Promise.all(snap.docs.map((d) => deleteDoc(doc(db, `users/${UID}/${col}/${d.id}`))));
+    }
+    setClearing(false);
+    alert("All Firestore data cleared.");
   };
 
   return (
@@ -112,34 +111,32 @@ export default function SettingsPage() {
           <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>Key: Hip flexor stretch + glute activation every session</p>
         </div>
 
+        {/* Firestore path info */}
+        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12, borderLeft: "3px solid #0077b6" }}>
+          <p style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: "#0077b6" }}>Firestore Storage</p>
+          {COLLECTIONS.map((col) => (
+            <div key={col} style={{ fontSize: 12, color: "#9ca3af", padding: "3px 0" }}>
+              users/ulvi/<span style={{ color: "#fff" }}>{col}</span>
+            </div>
+          ))}
+        </div>
+
         {/* Data Actions */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
           <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 12 }}>Data</p>
-          <button
-            onClick={exportData}
-            style={{
-              width: "100%", padding: 12, backgroundColor: "#242442", border: "none", borderRadius: 10,
-              color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, marginBottom: 8,
-            }}
-          >
+          <button onClick={exportData} style={{ width: "100%", padding: 12, backgroundColor: "#242442", border: "none", borderRadius: 10, color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Download size={18} color="#0077b6" />
-            <span>Export All Data (JSON)</span>
+            <span>Export from Firestore (JSON)</span>
             <ChevronRight size={16} color="#9ca3af" style={{ marginLeft: "auto" }} />
           </button>
           {exportMsg && <p style={{ fontSize: 12, color: "#0f9b58", margin: "0 0 8px" }}>{exportMsg}</p>}
-          <button
-            onClick={clearAllData}
-            style={{
-              width: "100%", padding: 12, backgroundColor: "#e9456011", border: "1px solid #e9456033", borderRadius: 10,
-              color: "#e94560", cursor: "pointer", display: "flex", alignItems: "center", gap: 10,
-            }}
-          >
+          <button onClick={clearAllData} disabled={clearing} style={{ width: "100%", padding: 12, backgroundColor: "#e9456011", border: "1px solid #e9456033", borderRadius: 10, color: "#e94560", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
             <Trash2 size={18} />
-            <span>Clear All Data</span>
+            <span>{clearing ? "Clearing..." : "Clear All Firestore Data"}</span>
           </button>
         </div>
 
-        {/* App Info */}
+        {/* About */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
             <Info size={16} color="#9ca3af" />
