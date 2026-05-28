@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* ── Dark mode (default) ─────────────────────── */
 :root {
   --bg: #0f0f1a;
   --surface: #1a1a2e;
@@ -13,19 +14,98 @@
   --text: #ffffff;
   --text-muted: #9ca3af;
   --border: #2d2d4e;
+  --sidebar-width: 240px;
 }
 
-* {
-  box-sizing: border-box;
+/* ── Light mode ──────────────────────────────── */
+[data-theme="light"] {
+  --bg: #f5f5f7;
+  --surface: #ffffff;
+  --surface-light: #eef0f5;
+  --text: #0f0f1a;
+  --text-muted: #6b7280;
+  --border: #e2e5ec;
 }
 
-html,
-body {
+* { box-sizing: border-box; }
+
+html, body {
   background-color: var(--bg);
   color: var(--text);
+  margin: 0;
+  min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* ── Sidebar layout ──────────────────────────── */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  background-color: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 200;
+  transition: transform 0.25s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.page-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+
+/* Mobile overlay */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 190;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay.open {
+    display: block;
+  }
+  .page-content {
+    margin-left: 0;
+  }
+  .mobile-topbar {
+    display: flex !important;
+  }
+}
+
+.mobile-topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Scrollbar ───────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }

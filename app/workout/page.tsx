@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import Navigation from "@/components/shared/Navigation";
 import ExerciseCard from "@/components/workout/ExerciseCard";
 import { useAppData } from "@/components/shared/AppProvider";
 import { getDayOfWeek } from "@/lib/utils";
@@ -19,38 +18,38 @@ export default function WorkoutPage() {
 
   if (!workout) {
     return (
-      <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "#9ca3af" }}>Loading workout data...</p>
+      <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <p style={{ color: "var(--text-muted)" }}>Loading workout data...</p>
       </div>
     );
   }
 
   return (
-    <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ padding: "20px 16px 0" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", paddingBottom: 40 }}>
+      <div style={{ padding: "24px 24px 0" }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Workout Plan</h1>
-        <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>7-day hybrid program</p>
+        <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>7-day hybrid program</p>
       </div>
 
       {/* Day selector */}
-      <div style={{ padding: "12px 16px", display: "flex", gap: 6, overflowX: "auto" }}>
+      <div style={{ padding: "12px 24px", display: "flex", gap: 6, overflowX: "auto" }}>
         {DAY_ORDER.map((d) => {
           const w = workoutDays[d];
           const isSelected = d === selectedDay;
           const isToday = d === todayDayKey;
           return (
-            <button key={d} onClick={() => setSelectedDay(d)} style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: isToday ? `2px solid ${w.color}` : "2px solid transparent", backgroundColor: isSelected ? w.color : "#1a1a2e", color: isSelected ? "#fff" : isToday ? w.color : "#9ca3af", cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400 }}>
+            <button key={d} onClick={() => setSelectedDay(d)} style={{ flexShrink: 0, padding: "6px 12px", borderRadius: 20, border: isToday ? `2px solid ${w.color}` : "2px solid transparent", backgroundColor: isSelected ? w.color : "var(--surface)", color: isSelected ? "#fff" : isToday ? w.color : "var(--text-muted)", cursor: "pointer", fontSize: 12, fontWeight: isSelected ? 700 : 400 }}>
               {DAY_LABELS[d].slice(0, 3)}
             </button>
           );
         })}
       </div>
 
-      <div style={{ padding: "0 16px" }}>
+      <div style={{ padding: "0 24px" }}>
         {/* Workout header */}
-        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, marginBottom: 12, borderLeft: `4px solid ${workout.color}` }}>
+        <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 12, borderLeft: `4px solid ${workout.color}` }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>{workout.name}</h2>
-          <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#9ca3af" }}>
+          <div style={{ display: "flex", gap: 10, fontSize: 12, color: "var(--text-muted)" }}>
             <span>{workout.duration}</span>
             <span>·</span>
             <span style={{ color: workout.intensity === "High" ? "#e94560" : workout.intensity === "Moderate" ? "#fd7e14" : "#0f9b58" }}>
@@ -65,10 +64,10 @@ export default function WorkoutPage() {
         </div>
 
         {/* Morning Mobility */}
-        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 10 }}>
+        <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, marginBottom: 10 }}>
           <button onClick={() => setMobilityOpen(!mobilityOpen)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontWeight: 700, fontSize: 14, color: "#20c997" }}>Morning Mobility (15 min)</span>
-            {mobilityOpen ? <ChevronUp size={18} color="#9ca3af" /> : <ChevronDown size={18} color="#9ca3af" />}
+            {mobilityOpen ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
           </button>
           {mobilityOpen && (
             <div style={{ padding: "0 14px 14px" }}>
@@ -79,10 +78,10 @@ export default function WorkoutPage() {
 
         {/* Warmup */}
         {workout.warmup && workout.warmup.length > 0 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 10 }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, marginBottom: 10 }}>
             <button onClick={() => setWarmupOpen(!warmupOpen)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#fd7e14" }}>Warmup</span>
-              {warmupOpen ? <ChevronUp size={18} color="#9ca3af" /> : <ChevronDown size={18} color="#9ca3af" />}
+              {warmupOpen ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
             </button>
             {warmupOpen && (
               <div style={{ padding: "0 14px 14px" }}>
@@ -94,8 +93,8 @@ export default function WorkoutPage() {
 
         {/* Activation */}
         {workout.activation && workout.activation.length > 0 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 10 }}>
-            <div style={{ padding: 14, borderBottom: "1px solid #2d2d4e" }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, marginBottom: 10 }}>
+            <div style={{ padding: 14, borderBottom: "1px solid var(--border)" }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#6f42c1" }}>Activation</span>
             </div>
             <div style={{ padding: "10px 14px 14px" }}>
@@ -106,16 +105,16 @@ export default function WorkoutPage() {
 
         {/* Main Exercises */}
         <div style={{ marginBottom: 10 }}>
-          <p style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Main Exercises</p>
+          <p style={{ fontSize: 12, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 }}>Main Exercises</p>
           {workout.exercises.map((ex, i) => <ExerciseCard key={i} exercise={ex} accentColor={workout.color} />)}
         </div>
 
         {/* Cooldown */}
         {workout.cooldown && workout.cooldown.length > 0 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 16 }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, marginBottom: 16 }}>
             <button onClick={() => setCooldownOpen(!cooldownOpen)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#0077b6" }}>Cooldown & Stretch</span>
-              {cooldownOpen ? <ChevronUp size={18} color="#9ca3af" /> : <ChevronDown size={18} color="#9ca3af" />}
+              {cooldownOpen ? <ChevronUp size={18} color="var(--text-muted)" /> : <ChevronDown size={18} color="var(--text-muted)" />}
             </button>
             {cooldownOpen && (
               <div style={{ padding: "0 14px 14px" }}>
@@ -126,7 +125,6 @@ export default function WorkoutPage() {
         )}
       </div>
 
-      <Navigation />
     </div>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Trophy, Target } from "lucide-react";
-import Navigation from "@/components/shared/Navigation";
 import MetricCard from "@/components/progress/MetricCard";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
 import { useProfile } from "@/lib/hooks/useProfile";
@@ -51,19 +50,19 @@ export default function ProgressPage() {
   };
 
   return (
-    <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ padding: "20px 16px 12px" }}>
+    <div style={{ backgroundColor: "var(--bg)", minHeight: "100vh", paddingBottom: 40 }}>
+      <div style={{ padding: "24px 24px 12px" }}>
         <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Progress</h1>
-        <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>6-month hybrid journey</p>
+        <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 4 }}>6-month hybrid journey</p>
       </div>
 
-      <div style={{ padding: "0 16px" }}>
+      <div style={{ padding: "0 24px" }}>
         {/* Marathon Milestone */}
-        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, marginBottom: 12, borderTop: "3px solid #fd7e14" }}>
+        <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 16, marginBottom: 12, borderTop: "3px solid #fd7e14" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <Trophy size={20} color="#fd7e14" />
             <span style={{ fontWeight: 800, fontSize: 16 }}>Baku Marathon 2026</span>
-            <span style={{ fontSize: 11, color: "#9ca3af", marginLeft: "auto" }}>May 3, 2026</span>
+            <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: "auto" }}>May 3, 2026</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
             {[
@@ -74,9 +73,9 @@ export default function ProgressPage() {
               { label: "Elevation", value: `${profile.achievements.bakuMarathon2026.elevation}m` },
               { label: "Calories", value: profile.achievements.bakuMarathon2026.calories.toLocaleString() },
             ].map(({ label, value }) => (
-              <div key={label} style={{ textAlign: "center", padding: "8px 4px", backgroundColor: "#242442", borderRadius: 8 }}>
+              <div key={label} style={{ textAlign: "center", padding: "8px 4px", backgroundColor: "var(--surface-light)", borderRadius: 8 }}>
                 <div style={{ fontSize: 13, fontWeight: 700 }}>{value}</div>
-                <div style={{ fontSize: 10, color: "#9ca3af" }}>{label}</div>
+                <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{label}</div>
               </div>
             ))}
           </div>
@@ -93,14 +92,14 @@ export default function ProgressPage() {
 
         {/* Charts */}
         {weightData.length > 1 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Weight (kg)</p>
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={weightData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d4e" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <YAxis domain={["auto", "auto"]} tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <Tooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 8, fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <YAxis domain={["auto", "auto"]} tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                 <Line type="monotone" dataKey="weight" stroke="#fd7e14" strokeWidth={2} dot={{ fill: "#fd7e14", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -108,14 +107,14 @@ export default function ProgressPage() {
         )}
 
         {rhrData.length > 1 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Resting HR — lower is better</p>
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={rhrData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d4e" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <YAxis domain={["auto", "auto"]} tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <Tooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 8, fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <YAxis domain={["auto", "auto"]} tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                 <Line type="monotone" dataKey="rhr" stroke="#e94560" strokeWidth={2} dot={{ fill: "#e94560", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -123,14 +122,14 @@ export default function ProgressPage() {
         )}
 
         {hrvData.length > 1 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+          <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>HRV (ms)</p>
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={hrvData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d4e" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <YAxis domain={["auto", "auto"]} tick={{ fill: "#9ca3af", fontSize: 9 }} />
-                <Tooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 8, fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis dataKey="date" tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <YAxis domain={["auto", "auto"]} tick={{ fill: "var(--text-muted)", fontSize: 9 }} />
+                <Tooltip contentStyle={{ backgroundColor: "var(--surface)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                 <Line type="monotone" dataKey="hrv" stroke="#0f9b58" strokeWidth={2} dot={{ fill: "#0f9b58", r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -138,7 +137,7 @@ export default function ProgressPage() {
         )}
 
         {/* 6-Month Goals */}
-        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+        <div style={{ backgroundColor: "var(--surface)", borderRadius: 14, padding: 14, marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <Target size={16} color="#e94560" />
             <span style={{ fontWeight: 700, fontSize: 15 }}>6-Month Goals · Nov 2026</span>
@@ -149,15 +148,15 @@ export default function ProgressPage() {
               <div key={goal.metric} style={{ marginBottom: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
                   <span style={{ fontWeight: 600 }}>{goal.metric}</span>
-                  <span style={{ color: "#9ca3af" }}>
+                  <span style={{ color: "var(--text-muted)" }}>
                     {(goal as any).displayStart || goal.start} → {(goal as any).displayMonth6 || (goal as any).month6} {goal.unit}
                   </span>
                 </div>
-                <div style={{ height: 6, backgroundColor: "#242442", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ height: 6, backgroundColor: "var(--surface-light)", borderRadius: 3, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${Math.max(2, prog * 100)}%`, backgroundColor: "#e94560", borderRadius: 3, transition: "width 0.6s ease" }} />
                 </div>
                 {prog > 0 && (
-                  <p style={{ fontSize: 10, color: "#9ca3af", marginTop: 3 }}>{Math.round(prog * 100)}% to goal</p>
+                  <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 3 }}>{Math.round(prog * 100)}% to goal</p>
                 )}
               </div>
             );
@@ -165,7 +164,6 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      <Navigation />
     </div>
   );
 }

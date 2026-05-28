@@ -1,15 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Dumbbell, TrendingUp, Utensils, Activity, PersonStanding, Settings } from "lucide-react";
+import { LayoutDashboard, Dumbbell, Utensils, Settings } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", icon: LayoutDashboard, label: "Home" },
+  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/workout", icon: Dumbbell, label: "Workout" },
-  { href: "/pullups", icon: PersonStanding, label: "Pull Ups" },
   { href: "/nutrition", icon: Utensils, label: "Nutrition" },
-  { href: "/progress", icon: TrendingUp, label: "Progress" },
-  { href: "/running", icon: Activity, label: "Running" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
@@ -47,10 +44,10 @@ export default function Navigation() {
               textDecoration: "none",
               fontSize: 10,
               fontWeight: active ? 600 : 400,
-              minWidth: 44,
+              minWidth: 64,
             }}
           >
-            <Icon size={20} />
+            <Icon size={22} />
             {label}
           </Link>
         );
