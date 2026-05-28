@@ -1,32 +1,23 @@
 "use client";
 import { useState } from "react";
-import { ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import ExerciseCard from "@/components/workout/ExerciseCard";
 import { useAppData } from "@/components/shared/AppProvider";
-import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
 import { getDayOfWeek } from "@/lib/utils";
 import { DAY_ORDER, DAY_LABELS } from "@/lib/data/workouts";
 
 export default function WorkoutPage() {
-  const { workoutDays, morningMobility, seeding } = useAppData();
+  const { workoutDays, morningMobility } = useAppData();
   const todayDayKey = getDayOfWeek();
   const [selectedDay, setSelectedDay] = useState(todayDayKey);
   const [mobilityOpen, setMobilityOpen] = useState(false);
   const [warmupOpen, setWarmupOpen] = useState(false);
   const [cooldownOpen, setCooldownOpen] = useState(false);
 
-  const { data: completedDays, save: saveCompleted } = useFirestoreDoc<Record<string, boolean>>(
-    "workoutLogs", "completed", {}
-  );
-
   const workout = workoutDays[selectedDay];
 
-  const toggleCompleted = (key: string) => {
-    saveCompleted({ ...completedDays, [key]: !completedDays[key] });
-  };
-
-  if (seeding || !workout) {
+  if (!workout) {
     return (
       <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <p style={{ color: "#9ca3af" }}>Loading workout data...</p>
@@ -37,10 +28,11 @@ export default function WorkoutPage() {
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
       <div style={{ padding: "20px 16px 0" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Workout Tracker</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Workout Plan</h1>
         <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>7-day hybrid program</p>
       </div>
 
+      {/* Day selector */}
       <div style={{ padding: "12px 16px", display: "flex", gap: 6, overflowX: "auto" }}>
         {DAY_ORDER.map((d) => {
           const w = workoutDays[d];
@@ -55,27 +47,21 @@ export default function WorkoutPage() {
       </div>
 
       <div style={{ padding: "0 16px" }}>
+        {/* Workout header */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, marginBottom: 12, borderLeft: `4px solid ${workout.color}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
-              <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>{workout.name}</h2>
-              <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#9ca3af" }}>
-                <span>{workout.duration}</span>
-                <span>·</span>
-                <span style={{ color: workout.intensity === "High" ? "#e94560" : workout.intensity === "Moderate" ? "#fd7e14" : "#0f9b58" }}>
-                  {workout.intensity}
-                </span>
-              </div>
-              {workout.postureNote && (
-                <div style={{ marginTop: 8, padding: "6px 10px", backgroundColor: "#6f42c122", borderRadius: 8, fontSize: 11, color: "#c084fc" }}>
-                  {workout.postureNote}
-                </div>
-              )}
-            </div>
-            <button onClick={() => toggleCompleted(selectedDay)} style={{ background: "none", border: "none", cursor: "pointer" }}>
-              <CheckCircle size={28} color={completedDays[selectedDay] ? "#0f9b58" : "#2d2d4e"} />
-            </button>
+          <h2 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>{workout.name}</h2>
+          <div style={{ display: "flex", gap: 10, fontSize: 12, color: "#9ca3af" }}>
+            <span>{workout.duration}</span>
+            <span>·</span>
+            <span style={{ color: workout.intensity === "High" ? "#e94560" : workout.intensity === "Moderate" ? "#fd7e14" : "#0f9b58" }}>
+              {workout.intensity}
+            </span>
           </div>
+          {workout.postureNote && (
+            <div style={{ marginTop: 8, padding: "6px 10px", backgroundColor: "#6f42c122", borderRadius: 8, fontSize: 11, color: "#c084fc" }}>
+              {workout.postureNote}
+            </div>
+          )}
         </div>
 
         {/* Morning Mobility */}
@@ -126,7 +112,7 @@ export default function WorkoutPage() {
 
         {/* Cooldown */}
         {workout.cooldown && workout.cooldown.length > 0 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 10 }}>
+          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, marginBottom: 16 }}>
             <button onClick={() => setCooldownOpen(!cooldownOpen)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 14, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: 700, fontSize: 14, color: "#0077b6" }}>Cooldown & Stretch</span>
               {cooldownOpen ? <ChevronUp size={18} color="#9ca3af" /> : <ChevronDown size={18} color="#9ca3af" />}
@@ -138,11 +124,8 @@ export default function WorkoutPage() {
             )}
           </div>
         )}
-
-        <button onClick={() => toggleCompleted(selectedDay)} style={{ width: "100%", padding: 14, borderRadius: 12, border: "none", cursor: "pointer", backgroundColor: completedDays[selectedDay] ? "#0f9b58" : workout.color, color: "#fff", fontSize: 15, fontWeight: 700, marginBottom: 16 }}>
-          {completedDays[selectedDay] ? "Workout Completed!" : "Mark Complete"}
-        </button>
       </div>
+
       <Navigation />
     </div>
   );

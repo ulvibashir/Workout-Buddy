@@ -1,32 +1,34 @@
 "use client";
 import { createContext, useContext } from "react";
-import { useSeeder } from "@/lib/hooks/useSeeder";
 import { useFirestoreDoc } from "@/lib/hooks/useFirestoreData";
 import type { WorkoutDay } from "@/lib/data/workouts";
-import type { FoodItem } from "@/lib/data/nutrition";
+import type { FoodItem, NutritionMeal } from "@/lib/data/nutrition";
 import { WORKOUTS, MORNING_MOBILITY } from "@/lib/data/workouts";
-import { NUTRITION_TARGETS, FOOD_DATABASE, SUPPLEMENTS } from "@/lib/data/nutrition";
+import { NUTRITION_TARGETS, SUPPLEMENTS, MEAL_PLAN } from "@/lib/data/nutrition";
 import { PULLUP_PROGRAM, SIX_MONTH_GOALS, QUOTES } from "@/lib/data/athlete";
 
+interface NutritionMealsDoc {
+  training: NutritionMeal[];
+  rest: NutritionMeal[];
+}
+
 interface AppData {
-  seeding: boolean;
   workoutDays: Record<string, WorkoutDay>;
   morningMobility: typeof MORNING_MOBILITY;
   nutritionTargets: typeof NUTRITION_TARGETS;
   supplements: typeof SUPPLEMENTS;
-  foodDatabase: FoodItem[];
+  nutritionMeals: NutritionMealsDoc;
   pullupProgram: typeof PULLUP_PROGRAM;
   sixMonthGoals: typeof SIX_MONTH_GOALS;
   quotes: string[];
 }
 
 const AppContext = createContext<AppData>({
-  seeding: true,
   workoutDays: WORKOUTS,
   morningMobility: MORNING_MOBILITY,
   nutritionTargets: NUTRITION_TARGETS,
   supplements: SUPPLEMENTS,
-  foodDatabase: FOOD_DATABASE,
+  nutritionMeals: MEAL_PLAN,
   pullupProgram: PULLUP_PROGRAM,
   sixMonthGoals: SIX_MONTH_GOALS,
   quotes: QUOTES,
@@ -37,9 +39,6 @@ export function useAppData() {
 }
 
 export default function AppProvider({ children }: { children: React.ReactNode }) {
-  const { seeding } = useSeeder();
-
-  // Read all program data from Firestore
   const { data: wMon } = useFirestoreDoc<WorkoutDay>("workoutDays", "monday", WORKOUTS.monday);
   const { data: wTue } = useFirestoreDoc<WorkoutDay>("workoutDays", "tuesday", WORKOUTS.tuesday);
   const { data: wWed } = useFirestoreDoc<WorkoutDay>("workoutDays", "wednesday", WORKOUTS.wednesday);
@@ -56,8 +55,8 @@ export default function AppProvider({ children }: { children: React.ReactNode })
   const { data: supplementsDoc } = useFirestoreDoc<{ items: typeof SUPPLEMENTS }>(
     "nutritionConfig", "supplements", { items: SUPPLEMENTS }
   );
-  const { data: foodDoc } = useFirestoreDoc<{ foods: FoodItem[] }>(
-    "foodDatabase", "all", { foods: FOOD_DATABASE }
+  const { data: mealsDoc } = useFirestoreDoc<NutritionMealsDoc>(
+    "nutritionConfig", "meals", MEAL_PLAN
   );
   const { data: pullupProgram } = useFirestoreDoc<typeof PULLUP_PROGRAM>(
     "pullupProgram", "main", PULLUP_PROGRAM
@@ -70,7 +69,6 @@ export default function AppProvider({ children }: { children: React.ReactNode })
   );
 
   const value: AppData = {
-    seeding,
     workoutDays: {
       monday: wMon,
       tuesday: wTue,
@@ -83,7 +81,7 @@ export default function AppProvider({ children }: { children: React.ReactNode })
     morningMobility: mobilityDoc.exercises,
     nutritionTargets,
     supplements: supplementsDoc.items,
-    foodDatabase: foodDoc.foods,
+    nutritionMeals: mealsDoc,
     pullupProgram,
     sixMonthGoals: goalsDoc.goals,
     quotes: quotesDoc.quotes,

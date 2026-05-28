@@ -72,3 +72,54 @@ export const SUPPLEMENTS = [
 ];
 
 export const MEAL_SECTIONS = ["Breakfast", "Snack", "Lunch", "Pre-workout", "Post-workout", "Dinner"];
+
+export interface NutritionMeal {
+  id: string;
+  emoji: string;
+  time: string;
+  name: string;
+  foods: string;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export const MEAL_PLAN: { training: NutritionMeal[]; rest: NutritionMeal[] } = {
+  training: [
+    { id: "t1", emoji: "🌅", time: "07:00", name: "Breakfast", foods: "Oats 80g + 3 boiled eggs + banana + black tea", protein: 32, carbs: 75, fat: 15 },
+    { id: "t2", emoji: "🏋️", time: "12:00", name: "Pre-Workout", foods: "Banana + rice cakes 60g + coffee (black)", protein: 6, carbs: 55, fat: 2 },
+    { id: "t3", emoji: "💪", time: "14:30", name: "Post-Workout", foods: "Chicken breast 200g + white rice 150g + salad", protein: 50, carbs: 90, fat: 6 },
+    { id: "t4", emoji: "🍽️", time: "19:00", name: "Dinner", foods: "Salmon 200g + buckwheat 120g + grilled vegetables", protein: 44, carbs: 72, fat: 30 },
+    { id: "t5", emoji: "🌙", time: "21:30", name: "Evening Snack", foods: "Greek yogurt 200g + almonds 20g + honey drizzle", protein: 24, carbs: 20, fat: 14 },
+  ],
+  rest: [
+    { id: "r1", emoji: "🌅", time: "08:00", name: "Breakfast", foods: "3 eggs + avocado toast + cottage cheese 150g", protein: 38, carbs: 28, fat: 22 },
+    { id: "r2", emoji: "🥗", time: "13:00", name: "Lunch", foods: "Chicken breast 180g + buckwheat 100g + salad with olive oil", protein: 44, carbs: 62, fat: 16 },
+    { id: "r3", emoji: "🍽️", time: "19:00", name: "Dinner", foods: "Beef lean 180g + sweet potato 200g + steamed vegetables", protein: 47, carbs: 55, fat: 14 },
+    { id: "r4", emoji: "🌙", time: "21:30", name: "Evening Snack", foods: "Greek yogurt 200g + berries", protein: 22, carbs: 18, fat: 4 },
+  ],
+};
+
+export const FOOD_GUIDE = {
+  eatFreely: [
+    { name: "Chicken Breast", stat: "31g protein / 100g" },
+    { name: "Eggs", stat: "6g protein / egg" },
+    { name: "Salmon", stat: "22g protein / 100g" },
+    { name: "Greek Yogurt", stat: "10g protein / 100g" },
+    { name: "Leafy Greens", stat: "Low cal, high fiber" },
+    { name: "Cucumber / Tomato", stat: "Hydration + micronutrients" },
+  ],
+  eatModeration: [
+    { name: "White Rice", stat: "78g carbs / 100g dry" },
+    { name: "Buckwheat", stat: "72g carbs / 100g dry" },
+    { name: "Whole Grain Bread", stat: "2 slices max" },
+    { name: "Peanut Butter", stat: "2 tbsp = 190 kcal" },
+    { name: "Dates", stat: "7g carbs / date" },
+  ],
+  avoid: [
+    { name: "Alcohol", stat: "Kills recovery + sleep" },
+    { name: "Fried Food", stat: "Inflammatory fats" },
+    { name: "Sugary Drinks", stat: "Empty calories" },
+    { name: "Ultra-Processed Snacks", stat: "No micronutrients" },
+  ],
+};

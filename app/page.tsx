@@ -23,7 +23,7 @@ export default function Dashboard() {
   const todayWorkout = workoutDays[dayKey];
   const quote = quotes[today.getDate() % Math.max(quotes.length, 1)];
 
-  const { data: completedDays } = useFirestoreDoc<Record<string, boolean>>("workoutLogs", "completed", {});
+  const { data: completedDays } = useFirestoreDoc<Record<string, boolean>>("workoutLogs", "completed", {} as Record<string, boolean>);
   const { items: bodyMetrics } = useFirestoreCollection<BodyMetric>("bodyMetrics");
   const { items: pullUpLogs } = useFirestoreCollection<PullUpSession>("pullUpLogs");
   const { items: runLogs } = useFirestoreCollection<RunLog>("runningLogs");

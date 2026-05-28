@@ -1,9 +1,6 @@
 "use client";
-import { useEffect } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { ATHLETE } from "@/lib/data/athlete";
 import { useFirestoreDoc } from "./useFirestoreData";
+import { ATHLETE } from "@/lib/data/athlete";
 
 export interface UserProfile {
   name: string;
@@ -55,19 +52,8 @@ const DEFAULT_PROFILE: UserProfile = {
 };
 
 export function useProfile() {
-  const { data: profile, loading, save } = useFirestoreDoc<UserProfile>(
+  const { data: profile, loading } = useFirestoreDoc<UserProfile>(
     "profile", "main", DEFAULT_PROFILE
   );
-
-  // Seed Firestore with default profile on first ever load
-  useEffect(() => {
-    const profileRef = doc(db, "users/ulvi/profile/main");
-    getDoc(profileRef).then((snap) => {
-      if (!snap.exists()) {
-        setDoc(profileRef, DEFAULT_PROFILE);
-      }
-    });
-  }, []);
-
-  return { profile, loading, save };
+  return { profile, loading };
 }

@@ -1,11 +1,9 @@
 "use client";
-import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Plus, Minus, Target, RefreshCw } from "lucide-react";
+import { Target, RefreshCw } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import { useAppData } from "@/components/shared/AppProvider";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
-import { getTodayKey } from "@/lib/utils";
 
 interface PullUpSession {
   id: string;
@@ -15,23 +13,8 @@ interface PullUpSession {
 }
 
 export default function PullUpsPage() {
-  const { pullupProgram, seeding } = useAppData();
-  const { items: sessions, upsert } = useFirestoreCollection<PullUpSession>("pullUpLogs");
-  const todayKey = getTodayKey();
-
-  const todaySession = sessions.find((s) => s.id === todayKey);
-  const todaySets = todaySession?.sets ?? [];
-  const [currentReps, setCurrentReps] = useState(pullupProgram.currentTraining.reps);
-
-  const addSet = (reps: number) => {
-    const newSets = [...todaySets, reps];
-    upsert({ id: todayKey, sets: newSets, maxReps: Math.max(...newSets), totalReps: newSets.reduce((a, b) => a + b, 0) });
-  };
-
-  const removeLastSet = () => {
-    const newSets = todaySets.slice(0, -1);
-    upsert({ id: todayKey, sets: newSets, maxReps: newSets.length ? Math.max(...newSets) : 0, totalReps: newSets.reduce((a, b) => a + b, 0) });
-  };
+  const { pullupProgram } = useAppData();
+  const { items: sessions } = useFirestoreCollection<PullUpSession>("pullUpLogs");
 
   const allTimeMax = sessions.length
     ? Math.max(...sessions.map((s) => s.maxReps), pullupProgram.currentMax)
@@ -42,17 +25,7 @@ export default function PullUpsPage() {
     .slice(-14)
     .map((s) => ({ date: s.id.slice(5), total: s.totalReps, max: s.maxReps }));
 
-  const totalSets = todaySets.length;
-  const totalReps = todaySets.reduce((a, b) => a + b, 0);
-  const targetTotal = pullupProgram.currentTraining.sets * pullupProgram.currentTraining.reps;
-
-  if (seeding) {
-    return (
-      <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "#9ca3af" }}>Loading...</p>
-      </div>
-    );
-  }
+  const sortedSessions = [...sessions].sort((a, b) => b.id.localeCompare(a.id));
 
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
@@ -62,56 +35,60 @@ export default function PullUpsPage() {
       </div>
 
       <div style={{ padding: "0 16px" }}>
+        {/* Stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
           <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, textAlign: "center", borderTop: "3px solid #e94560" }}>
             <div style={{ fontSize: 42, fontWeight: 900, color: "#e94560" }}>{allTimeMax}</div>
             <div style={{ color: "#9ca3af", fontSize: 12 }}>All-Time Max Reps</div>
           </div>
           <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, textAlign: "center", borderTop: "3px solid #0077b6" }}>
-            <div style={{ fontSize: 42, fontWeight: 900, color: "#0077b6" }}>
+            <div style={{ fontSize: 38, fontWeight: 900, color: "#0077b6" }}>
               {pullupProgram.currentTraining.sets}×{pullupProgram.currentTraining.reps}
             </div>
             <div style={{ color: "#9ca3af", fontSize: 12 }}>Training Protocol</div>
           </div>
         </div>
 
-        {/* Today's Log */}
-        <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 16, marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, fontSize: 15 }}>Today's Sets</span>
-            <span style={{ color: "#9ca3af", fontSize: 13 }}>{totalReps}/{targetTotal} reps</span>
+        {/* Volume Chart */}
+        {chartData.length > 1 && (
+          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Volume (last 14 days)</p>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d4e" />
+                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 10 }} />
+                <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} />
+                <Tooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 8 }} />
+                <Bar dataKey="total" fill="#e94560" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-            {todaySets.map((reps, i) => (
-              <div key={i} style={{ backgroundColor: "#242442", borderRadius: 8, padding: "6px 14px", fontSize: 16, fontWeight: 700, color: "#e94560", border: "1px solid #e9456033" }}>
-                {reps}
+        )}
+
+        {/* Recent sessions */}
+        {sortedSessions.length > 0 && (
+          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Recent Sessions</p>
+            {sortedSessions.slice(0, 7).map((session) => (
+              <div key={session.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid #2d2d4e" }}>
+                <div>
+                  <span style={{ fontSize: 13, color: "#9ca3af" }}>{session.id}</span>
+                  <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                    {session.sets?.map((reps, i) => (
+                      <span key={i} style={{ fontSize: 11, backgroundColor: "#242442", borderRadius: 6, padding: "2px 8px", color: "#e94560", fontWeight: 700 }}>
+                        {reps}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 15, color: "#e94560", fontWeight: 700 }}>{session.maxReps} max</div>
+                  <div style={{ fontSize: 11, color: "#9ca3af" }}>{session.totalReps} total</div>
+                </div>
               </div>
             ))}
-            {todaySets.length === 0 && <span style={{ color: "#9ca3af", fontSize: 13 }}>No sets logged yet</span>}
           </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 20, marginBottom: 14 }}>
-            <button onClick={() => setCurrentReps((r) => Math.max(1, r - 1))} style={{ width: 44, height: 44, borderRadius: "50%", border: "1px solid #2d2d4e", background: "#242442", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-              <Minus size={18} />
-            </button>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 44, fontWeight: 900, lineHeight: 1 }}>{currentReps}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af" }}>reps</div>
-            </div>
-            <button onClick={() => setCurrentReps((r) => r + 1)} style={{ width: 44, height: 44, borderRadius: "50%", border: "none", background: "#e94560", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-              <Plus size={18} />
-            </button>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => addSet(currentReps)} style={{ flex: 1, padding: 12, backgroundColor: "#e94560", border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              Log Set {totalSets + 1}
-            </button>
-            {todaySets.length > 0 && (
-              <button onClick={removeLastSet} style={{ width: 46, padding: 12, backgroundColor: "#242442", border: "none", borderRadius: 10, color: "#9ca3af", cursor: "pointer" }}>
-                <Minus size={16} />
-              </button>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Grip Rotation */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
@@ -132,23 +109,7 @@ export default function PullUpsPage() {
           ))}
         </div>
 
-        {/* Volume Chart */}
-        {chartData.length > 1 && (
-          <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Volume (last 14 days)</p>
-            <ResponsiveContainer width="100%" height={140}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d4e" />
-                <XAxis dataKey="date" tick={{ fill: "#9ca3af", fontSize: 10 }} />
-                <YAxis tick={{ fill: "#9ca3af", fontSize: 10 }} />
-                <Tooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid #2d2d4e", borderRadius: 8 }} />
-                <Bar dataKey="total" fill="#e94560" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {/* Progression Plan */}
+        {/* 6-Month Progression Plan */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <Target size={16} color="#0f9b58" />
@@ -167,6 +128,7 @@ export default function PullUpsPage() {
           ))}
         </div>
       </div>
+
       <Navigation />
     </div>
   );

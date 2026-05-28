@@ -1,10 +1,7 @@
 "use client";
-import { useState } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Plus, X } from "lucide-react";
 import Navigation from "@/components/shared/Navigation";
 import { useFirestoreCollection } from "@/lib/hooks/useFirestoreData";
-import { getTodayKey } from "@/lib/utils";
 
 interface RunLog {
   id: string;
@@ -29,28 +26,9 @@ const MARATHON: RunLog = {
 };
 
 export default function RunningPage() {
-  const { items: runs, upsert } = useFirestoreCollection<RunLog>("runningLogs");
-  const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ date: getTodayKey(), distance: "", time: "", avgHR: "", avgPace: "", notes: "", runType: "Zone 2 Run" });
+  const { items: runs } = useFirestoreCollection<RunLog>("runningLogs");
 
-  // Always include marathon even if not yet in Firestore
   const allRuns = runs.some((r) => r.id === MARATHON.id) ? runs : [...runs, MARATHON];
-
-  const addRun = () => {
-    upsert({
-      id: Date.now().toString(),
-      date: form.date,
-      distance: parseFloat(form.distance) || 0,
-      time: form.time,
-      avgHR: parseInt(form.avgHR) || 0,
-      avgPace: form.avgPace,
-      notes: form.notes,
-      runType: form.runType,
-    });
-    setShowAdd(false);
-    setForm({ date: getTodayKey(), distance: "", time: "", avgHR: "", avgPace: "", notes: "", runType: "Zone 2 Run" });
-  };
-
   const sortedRuns = [...allRuns].sort((a, b) => b.date.localeCompare(a.date));
   const totalKm = allRuns.reduce((a, r) => a + r.distance, 0);
   const longestRun = Math.max(...allRuns.map((r) => r.distance));
@@ -75,17 +53,13 @@ export default function RunningPage() {
 
   return (
     <div style={{ backgroundColor: "#0f0f1a", minHeight: "100vh", paddingBottom: 90 }}>
-      <div style={{ padding: "20px 16px 12px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Running Log</h1>
-          <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>Target: 9:06 → 7:00/km</p>
-        </div>
-        <button onClick={() => setShowAdd(true)} style={{ backgroundColor: "#0077b6", border: "none", borderRadius: 10, padding: "8px 14px", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
-          <Plus size={16} /> Log Run
-        </button>
+      <div style={{ padding: "20px 16px 12px" }}>
+        <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0 }}>Running Log</h1>
+        <p style={{ color: "#9ca3af", fontSize: 13, marginTop: 4 }}>Target: 9:06 → 7:00/km</p>
       </div>
 
       <div style={{ padding: "0 16px" }}>
+        {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 12 }}>
           {[
             { label: "Total km", value: `${Math.round(totalKm * 10) / 10}`, unit: "km", color: "#0077b6" },
@@ -99,6 +73,7 @@ export default function RunningPage() {
           ))}
         </div>
 
+        {/* Monthly km chart */}
         {monthlyChart.length > 0 && (
           <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Monthly km</p>
@@ -114,6 +89,7 @@ export default function RunningPage() {
           </div>
         )}
 
+        {/* Pace progression chart */}
         {paceChart.length > 1 && (
           <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Pace Progression</p>
@@ -130,7 +106,7 @@ export default function RunningPage() {
           </div>
         )}
 
-        {/* Monthly Targets */}
+        {/* Monthly Progression Targets */}
         <div style={{ backgroundColor: "#1a1a2e", borderRadius: 14, padding: 14, marginBottom: 12 }}>
           <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 10 }}>Monthly Progression Targets</p>
           {[
@@ -170,42 +146,6 @@ export default function RunningPage() {
           ))}
         </div>
       </div>
-
-      {showAdd && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.7)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
-          <div style={{ backgroundColor: "#1a1a2e", width: "100%", borderRadius: "16px 16px 0 0", padding: 20, maxHeight: "85vh", overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-              <h3 style={{ margin: 0, fontWeight: 700 }}>Log a Run</h3>
-              <button onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer" }}><X size={20} color="#9ca3af" /></button>
-            </div>
-            {[
-              { field: "date", label: "Date", type: "date" },
-              { field: "distance", label: "Distance (km)", type: "number", placeholder: "10" },
-              { field: "time", label: "Total Time (HH:MM:SS)", type: "text", placeholder: "1:05:00" },
-              { field: "avgPace", label: "Avg Pace (min:sec/km)", type: "text", placeholder: "9:06" },
-              { field: "avgHR", label: "Avg Heart Rate (bpm)", type: "number", placeholder: "145" },
-              { field: "notes", label: "Notes", type: "text", placeholder: "Zone 2 run..." },
-            ].map(({ field, label, type, placeholder = "" }) => (
-              <div key={field} style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 12, color: "#9ca3af", display: "block", marginBottom: 4 }}>{label}</label>
-                <input type={type} placeholder={placeholder} value={(form as any)[field]} onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                  style={{ width: "100%", padding: "10px 12px", background: "#242442", border: "1px solid #2d2d4e", borderRadius: 8, color: "#fff", fontSize: 15 }}
-                />
-              </div>
-            ))}
-            <div style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 12, color: "#9ca3af", display: "block", marginBottom: 4 }}>Run Type</label>
-              <select value={form.runType} onChange={(e) => setForm({ ...form, runType: e.target.value })} style={{ width: "100%", padding: "10px 12px", background: "#242442", border: "1px solid #2d2d4e", borderRadius: 8, color: "#fff", fontSize: 15 }}>
-                {["Zone 2 Run", "Long Run", "Interval", "Race", "Easy Run", "Trail Run"].map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setShowAdd(false)} style={{ flex: 1, padding: 12, background: "#242442", border: "none", borderRadius: 10, color: "#9ca3af", cursor: "pointer" }}>Cancel</button>
-              <button onClick={addRun} style={{ flex: 2, padding: 12, background: "#0077b6", border: "none", borderRadius: 10, color: "#fff", fontWeight: 700, cursor: "pointer" }}>Save Run</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <Navigation />
     </div>
